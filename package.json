@@ -1,0 +1,11 @@
+﻿{
+  "name": "erp-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "go run cli/main.go dev",
+    "run": "go run cli/main.go run",
+    "install-deps": "go run cli/main.go install",
+    "add-service": "go run cli/main.go add"
+  }
+}

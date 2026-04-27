@@ -1,0 +1,10 @@
+go 1.26.1
+
+use (
+	..\cli
+	./api-gateway
+	./services/finance-service
+	./services/hr-service
+	./shared/auth
+	./shared/logger
+)
