@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"encoding/json"
 	"erp/hr-service/internal/models"
 	sharedLogger "erp/shared/logger"
-	"fmt"
+
 	"github.com/gofiber/fiber/v3"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -29,12 +31,20 @@ func (h *EmployeeHandler) Create(c fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": result.Error.Error()})
 	}
 
-	// Basic Audit Log for Creation
+	// Log audit trail
+	newValuesMap := map[string]interface{}{
+		"employee_id": emp.EmployeeID,
+		"name":        emp.Name,
+		"email":       emp.Email,
+	}
+	newValuesJSON, _ := json.Marshal(newValuesMap)
 	h.DB.Create(&models.AuditLog{
-		EmployeeID: emp.ID,
-		Action:     "CREATE",
-		Field:      "ALL",
-		NewValue:   fmt.Sprintf("Employee %s created", emp.Name),
+		EntityType: "Employee",
+		EntityID:   emp.ID,
+		UserID:     emp.ID, // In real scenario, use authenticated user ID
+		Action:     "Create",
+		NewValues:  datatypes.JSON(newValuesJSON),
+		Status:     "Success",
 	})
 
 	sharedLogger.Success(h.ServiceName, "Employee %s created successfully.", emp.Name)
@@ -62,14 +72,24 @@ func (h *EmployeeHandler) Update(c fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cannot parse JSON"})
 	}
 
-	// Simple Audit for Status change
+	// Log audit for status change
 	if updateData.Status != "" && updateData.Status != existing.Status {
+		oldValuesMap := map[string]interface{}{
+			"status": existing.Status,
+		}
+		newValuesMap := map[string]interface{}{
+			"status": updateData.Status,
+		}
+		oldValuesJSON, _ := json.Marshal(oldValuesMap)
+		newValuesJSON, _ := json.Marshal(newValuesMap)
 		h.DB.Create(&models.AuditLog{
-			EmployeeID: existing.ID,
-			Action:     "UPDATE",
-			Field:      "Status",
-			OldValue:   existing.Status,
-			NewValue:   updateData.Status,
+			EntityType: "Employee",
+			EntityID:   existing.ID,
+			UserID:     existing.ID, // In real scenario, use authenticated user ID
+			Action:     "Update",
+			OldValues:  datatypes.JSON(oldValuesJSON),
+			NewValues:  datatypes.JSON(newValuesJSON),
+			Status:     "Success",
 		})
 	}
 
