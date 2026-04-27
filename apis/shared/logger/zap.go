@@ -1,8 +1,9 @@
-﻿package logger
+package logger
 
 import (
 	"fmt"
-	"github.com/gofiber/fiber/v2/middleware/logger"
+
+	"github.com/gofiber/fiber/v3/middleware/logger"
 )
 
 const (
@@ -16,7 +17,7 @@ const (
 
 func GetConfig(serviceName string) logger.Config {
 	return logger.Config{
-		Format: fmt.Sprintf("%s[%s]%s ${time} | ${status} | ${latency} | ${ip} | ${method} | ${path} ${error}\n", ColorCyan, serviceName, ColorReset),
+		Format:     fmt.Sprintf("%s[%s]%s ${time} | ${status} | ${latency} | ${ip} | ${method} | ${path} ${error}\n", ColorCyan, serviceName, ColorReset),
 		TimeFormat: "15:04:05",
 	}
 }

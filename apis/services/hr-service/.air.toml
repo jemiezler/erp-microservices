@@ -1,0 +1,29 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/main.exe ./cmd/api"
+  bin = "tmp/main.exe"
+  entrypoint = "tmp/main.exe"
+  delay = 1000
+
+  include_ext = ["go"]
+  exclude_dir = ["tmp", "vendor", "test"]
+
+  stop_on_error = true
+
+[log]
+  main_only = true
+  time = false
+
+[color]
+  main = "off"
+  watcher = "off"
+  build = "off"
+  runner = "off"
+
+[misc]
+  clean_on_exit = true
+
+[screen]
+  clear_on_rebuild = false

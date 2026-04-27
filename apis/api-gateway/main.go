@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"log"
@@ -8,19 +8,18 @@ import (
 	"time"
 
 	sharedLogger "erp/shared/logger"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/proxy"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/logger"
+	"github.com/gofiber/fiber/v3/middleware/proxy"
 )
 
 func main() {
-	app := fiber.New(fiber.Config{
-		ReadTimeout: 10 * time.Second,
-	})
+	app := fiber.New(fiber.Config{ReadTimeout: 10 * time.Second})
 
 	app.Use(logger.New(sharedLogger.GetConfig("API-GATEWAY")))
 
-	app.Use(func(c *fiber.Ctx) error {
+	app.Use(func(c fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -30,7 +29,7 @@ func main() {
 		return c.Next()
 	})
 
-	app.All("/api/v1/hr/*", func(c *fiber.Ctx) error {
+	app.All("/api/v1/hr/*", func(c fiber.Ctx) error {
 		target := "http://localhost:8081" + c.Path()
 		if err := proxy.Do(c, target); err != nil {
 			return err
@@ -38,7 +37,7 @@ func main() {
 		return nil
 	})
 
-	app.All("/api/v1/finance/*", func(c *fiber.Ctx) error {
+	app.All("/api/v1/finance/*", func(c fiber.Ctx) error {
 		target := "http://localhost:8082" + c.Path()
 		if err := proxy.Do(c, target); err != nil {
 			return err
@@ -47,7 +46,7 @@ func main() {
 	})
 
 	go func() {
-		if err := app.Listen(":8080"); err != nil {
+		if err := app.Listen(":8080", fiber.ListenConfig{DisableStartupMessage: true}); err != nil {
 			log.Panic(err)
 		}
 	}()

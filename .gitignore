@@ -1,0 +1,40 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node / frontend
+node_modules/
+.pnpm-store/
+.turbo/
+dist/
+build/
+coverage/
+.next/
+out/
+
+# Go
+bin/
+*.exe
+*.test
+*.out
+coverage.out
+
+# Misc caches
+.cache/
+.parcel-cache/

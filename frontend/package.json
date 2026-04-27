@@ -1,0 +1,16 @@
+﻿{
+  "name": "erp-frontend",
+  "private": true,
+  "packageManager": "pnpm@10.32.1",
+  "scripts": {
+    "dev": "turbo run dev --log-prefix=none",
+    "build": "turbo run build"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "turbo": "latest"
+  }
+}

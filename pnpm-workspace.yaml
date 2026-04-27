@@ -1,4 +1,0 @@
-﻿packages:
-  - 'apis/*'
-  - 'frontend/apps/*'
-  - 'frontend/packages/*'

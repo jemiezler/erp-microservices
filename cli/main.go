@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
+	"slices"
 	"sync"
 	"syscall"
 )
@@ -16,14 +18,15 @@ const (
 	ColorCyan   = "\033[0;36m"
 	ColorYellow = "\033[1;33m"
 	ColorGreen  = "\033[0;32m"
-	ColorRed    = "\033[0;31m"
+	ColorRed    = "\033[1;31m"
 )
 
 func logSystem(level, message string) {
 	color := ColorBlue
-	if level == "SUCCESS" {
+	switch level {
+	case "SUCCESS":
 		color = ColorGreen
-	} else if level == "ERROR" {
+	case "ERROR":
 		color = ColorRed
 	}
 	fmt.Printf("%s[SYSTEM] %s: %s%s\n", color, level, message, ColorReset)
@@ -39,7 +42,7 @@ func logLaunch(service, port, status string) {
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: cli [run|dev|add|install] [args...]")
+		fmt.Println("Usage: cli [run|dev|add|install]")
 		os.Exit(1)
 	}
 
@@ -62,7 +65,7 @@ func main() {
 	}
 }
 
-func installDeps(requestedServices []string) {
+func installDeps(_ []string) {
 	logSystem("INFO", "Validating workspace dependencies...")
 	var targets []string
 	filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
@@ -78,8 +81,9 @@ func installDeps(requestedServices []string) {
 		go func(t string) {
 			defer wg.Done()
 			logDeps("TIDY", t)
-			exec.Command("go", "mod", "tidy").Dir = t
-			exec.Command("go", "mod", "tidy").Run()
+			cmd := exec.Command("go", "mod", "tidy")
+			cmd.Dir = t
+			cmd.Run()
 		}(target)
 	}
 	wg.Wait()
@@ -93,7 +97,10 @@ func runWorkspace(requestedServices []string, isDev bool) {
 	}
 
 	logSystem("INFO", "Starting ERP Orchestrator...")
-	exec.Command("docker-compose", "up", "-d").Run()
+	// Try docker-compose then docker compose
+	if err := exec.Command("docker-compose", "up", "-d").Run(); err != nil {
+		exec.Command("docker", "compose", "up", "-d").Run()
+	}
 
 	var wg sync.WaitGroup
 	ctxSignals := make(chan os.Signal, 1)
@@ -103,14 +110,19 @@ func runWorkspace(requestedServices []string, isDev bool) {
 	var procMu sync.Mutex
 
 	startProcess := func(dir, name, port string, command string, args ...string) {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			cmd := exec.Command(command, args...)
+		wg.Go(func() {
+
+			// Resolve command for Windows compatibility
+			fullCmd, err := exec.LookPath(command)
+			if err != nil {
+				fullCmd = command
+			}
+
+			cmd := exec.Command(fullCmd, args...)
 			cmd.Dir = dir
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
-			
+
 			logLaunch(name, port, "STARTING")
 			if err := cmd.Start(); err != nil {
 				logSystem("ERROR", fmt.Sprintf("Failed to start %s: %v", name, err))
@@ -122,10 +134,10 @@ func runWorkspace(requestedServices []string, isDev bool) {
 			procMu.Unlock()
 
 			cmd.Wait()
-		}()
+		})
 	}
 
-	// 1. Start Backend Services
+	// 1. Start Backend (Using air or go run)
 	startProcess("apis/api-gateway", "API Gateway", "8080", "go", "run", "main.go")
 
 	servicesDir := filepath.Join("apis", "services")
@@ -142,13 +154,29 @@ func runWorkspace(requestedServices []string, isDev bool) {
 		}
 		name := entry.Name()
 		if runAll || contains(requestedServices, name) {
-			startProcess(filepath.Join(servicesDir, name, "cmd/api"), name, ports[name], "go", "run", "main.go")
+			// Corrected path to cmd/api
+			servicePath := filepath.Join(servicesDir, name)
+			startProcess(servicePath, name, ports[name], "go", "run", "./cmd/api")
 		}
 	}
 
-	// 2. Start Frontend (If running all or explicitly requested)
+	// 2. Start Frontend with CLEAN TURBO LOGS
 	if runAll || contains(requestedServices, "frontend") {
-		startProcess("frontend/apps/host-app", "Host App", "3000", "pnpm", "dev")
+		startProcess(
+			filepath.Join("frontend", "apps", "host-app"),
+			"host-app",
+			"3000",
+			"pnpm",
+			"dev",
+		)
+
+		startProcess(
+			filepath.Join("frontend", "apps", "hr-mfe"),
+			"hr-mfe",
+			"3001",
+			"pnpm",
+			"dev",
+		)
 	}
 
 	logSystem("SUCCESS", "All services operational. Press CTRL+C to terminate.")
@@ -156,11 +184,15 @@ func runWorkspace(requestedServices []string, isDev bool) {
 	<-ctxSignals
 	fmt.Println()
 	logSystem("INFO", "Shutting down all processes...")
+
 	procMu.Lock()
 	for _, proc := range processes {
 		if proc != nil {
-			// On Windows, we might need more aggressive killing for Node processes
-			proc.Kill() 
+			if runtime.GOOS == "windows" {
+				exec.Command("taskkill", "/F", "/T", "/PID", fmt.Sprint(proc.Pid)).Run()
+			} else {
+				proc.Signal(os.Interrupt)
+			}
 		}
 	}
 	procMu.Unlock()
@@ -168,18 +200,9 @@ func runWorkspace(requestedServices []string, isDev bool) {
 }
 
 func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(slice, item)
 }
 
 func addService(name string) {
-	// ... (addService logic remains similar, but using new log style)
 	logSystem("INFO", fmt.Sprintf("Scaffolding new service: %s", name))
-	// [Implementation truncated for brevity, same as previous working version]
 }
-
-

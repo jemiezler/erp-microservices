@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"log"
@@ -7,8 +7,9 @@ import (
 	"syscall"
 
 	sharedLogger "erp/shared/logger"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/logger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -17,10 +18,10 @@ const ServiceName = "FINANCE-SERVICE"
 
 type Payroll struct {
 	gorm.Model
-	EmployeeID uint   `json:"employee_id" gorm:"uniqueIndex"`
-	AccountNum string `json:"account_num"`
+	EmployeeID uint    `json:"employee_id" gorm:"uniqueIndex"`
+	AccountNum string  `json:"account_num"`
 	BaseSalary float64 `json:"base_salary"`
-	Status     string `json:"status" gorm:"default:pending"`
+	Status     string  `json:"status" gorm:"default:pending"`
 }
 
 var DB *gorm.DB
@@ -43,18 +44,18 @@ func main() {
 
 	app.Use(logger.New(sharedLogger.GetConfig(ServiceName)))
 
-	app.Get("/health", func(c *fiber.Ctx) error {
+	app.Get("/health", func(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
 	finance := app.Group("/api/v1/finance")
 
-	finance.Post("/webhook/employee-created", func(c *fiber.Ctx) error {
+	finance.Post("/webhook/employee-created", func(c fiber.Ctx) error {
 		type Payload struct {
 			EmployeeID uint `json:"employee_id"`
 		}
 		var p Payload
-		if err := c.BodyParser(&p); err != nil {
+		if err := c.Bind().Body(&p); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid payload"})
 		}
 
@@ -72,7 +73,7 @@ func main() {
 		return c.Status(fiber.StatusOK).JSON(payroll)
 	})
 
-	finance.Get("/payroll/:id", func(c *fiber.Ctx) error {
+	finance.Get("/payroll/:id", func(c fiber.Ctx) error {
 		id := c.Params("id")
 		var p Payroll
 		if result := DB.First(&p, "employee_id = ?", id); result.Error != nil {
@@ -82,7 +83,7 @@ func main() {
 	})
 
 	go func() {
-		if err := app.Listen(":8082"); err != nil {
+		if err := app.Listen(":8082", fiber.ListenConfig{DisableStartupMessage: true}); err != nil {
 			log.Panic(err)
 		}
 	}()
