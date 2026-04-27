@@ -2,28 +2,34 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
+  bin = "./tmp/main.exe"
   cmd = "go build -o ./tmp/main.exe ./cmd/api"
-  bin = "tmp/main.exe"
-  entrypoint = "tmp/main.exe"
   delay = 1000
-
-  include_ext = ["go"]
-  exclude_dir = ["tmp", "vendor", "test"]
-
+  exclude_dir = ["assets", "tmp", "vendor", "test"]
+  exclude_file = []
+  exclude_regex = ["_test.go"]
+  exclude_unchanged = false
+  follow_symlink = false
+  full_bin = ""
+  include_dir = []
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  include_file = []
+  kill_delay = "0s"
+  log = "build-errors.log"
+  poll = false
+  poll_interval = 0
+  rerun = false
+  rerun_delay = 500
+  send_interrupt = false
   stop_on_error = true
 
 [log]
-  main_only = true
+  main_only = false
   time = false
 
-[color]
-  main = "off"
-  watcher = "off"
-  build = "off"
-  runner = "off"
-
 [misc]
-  clean_on_exit = true
+  clean_on_exit = false
 
 [screen]
   clear_on_rebuild = false
+  keep_scroll = true

@@ -36,6 +36,7 @@ func main() {
 	hr.Get("/", empHandler.GetAll)
 	hr.Post("/", empHandler.Create)
 	hr.Get("/:id", empHandler.GetByID)
+	hr.Patch("/:id", empHandler.Update)
 
 	go func() {
 		if err := app.Listen(":8081", fiber.ListenConfig{DisableStartupMessage: true}); err != nil {
