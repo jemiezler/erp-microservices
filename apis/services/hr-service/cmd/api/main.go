@@ -18,7 +18,7 @@ const ServiceName = "HR-SERVICE"
 
 func main() {
 	database.InitDB(ServiceName)
-	
+
 	app := fiber.New()
 
 	app.Use(logger.New(sharedLogger.GetConfig(ServiceName)))
@@ -31,6 +31,7 @@ func main() {
 		DB:          database.DB,
 		ServiceName: ServiceName,
 	}
+	stubHandler := &handlers.StubHandler{}
 
 	hr := app.Group("/api/v1/hr/employees")
 	hr.Get("/", empHandler.GetAll)
@@ -38,8 +39,13 @@ func main() {
 	hr.Get("/:id", empHandler.GetByID)
 	hr.Patch("/:id", empHandler.Update)
 
+	app.Get("/api/v1/hr/leaves/pending", stubHandler.GetPendingLeaves)
+	app.Get("/api/v1/hr/attendance/stats", stubHandler.GetAttendanceStats)
+	app.Get("/api/v1/hr/payroll/pending", stubHandler.GetPendingPayroll)
+
 	go func() {
-		if err := app.Listen(":8081", fiber.ListenConfig{DisableStartupMessage: true}); err != nil {
+		// Listen only on localhost - accessible only through API Gateway
+		if err := app.Listen("127.0.0.1:8081", fiber.ListenConfig{DisableStartupMessage: true}); err != nil {
 			log.Panic(err)
 		}
 	}()

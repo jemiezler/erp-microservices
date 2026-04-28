@@ -3,14 +3,19 @@ import type { NextConfig } from "next"
 const nextConfig: NextConfig = {
   devIndicators: false,
   transpilePackages: ["@erp/logger"],
-  async rewrites() {
+  async headers() {
     return [
       {
-        source: "/hr/:path*",
-        destination: "http://localhost:3001/hr/:path*",
-      },
+        source: "/:path*",
+        headers: [
+          {
+            key: "X-Frame-Options",
+            value: "SAMEORIGIN"
+          }
+        ]
+      }
     ]
-  },
+  }
 }
 
 export default nextConfig
