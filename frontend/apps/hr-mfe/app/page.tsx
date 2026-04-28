@@ -2,6 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { employeeApi, leaveApi, attendanceApi, payrollApi, Employee, Leave, Attendance, AttendanceStats, Payroll, ApiError } from '@/lib/api-client';
+import { 
+  Button, 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle, 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow,
+  Badge,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from '@erp/ui';
 
 interface DashboardStats {
   totalEmployees: number;
@@ -90,104 +108,132 @@ export default function HRDashboard() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Total Employees</p>
-                <p className="text-2xl font-bold text-slate-900 mt-2">{stats.totalEmployees}</p>
-              </div>
-              <div className="text-4xl text-blue-200">👥</div>
-            </div>
-          </div>
+          <Card className="border-l-4 border-blue-500">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-slate-600 text-sm font-medium uppercase">Total Employees</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <p className="text-2xl font-bold text-slate-900">{stats.totalEmployees}</p>
+              <div className="text-3xl text-blue-200">👥</div>
+            </CardContent>
+          </Card>
 
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Active</p>
-                <p className="text-2xl font-bold text-slate-900 mt-2">{stats.activeEmployees}</p>
-              </div>
-              <div className="text-4xl text-green-200">✓</div>
-            </div>
-          </div>
+          <Card className="border-l-4 border-green-500">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-slate-600 text-sm font-medium uppercase">Active</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <p className="text-2xl font-bold text-slate-900">{stats.activeEmployees}</p>
+              <div className="text-3xl text-green-200">✓</div>
+            </CardContent>
+          </Card>
 
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Pending Leaves</p>
-                <p className="text-2xl font-bold text-slate-900 mt-2">{stats.pendingLeaves}</p>
-              </div>
-              <div className="text-4xl text-yellow-200">⏳</div>
-            </div>
-          </div>
+          <Card className="border-l-4 border-yellow-500">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-slate-600 text-sm font-medium uppercase">Pending Leaves</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <p className="text-2xl font-bold text-slate-900">{stats.pendingLeaves}</p>
+              <div className="text-3xl text-yellow-200">⏳</div>
+            </CardContent>
+          </Card>
 
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Present Today</p>
-                <p className="text-2xl font-bold text-slate-900 mt-2">{stats.todayPresent}</p>
-              </div>
-              <div className="text-4xl text-purple-200">📍</div>
-            </div>
-          </div>
+          <Card className="border-l-4 border-purple-500">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-slate-600 text-sm font-medium uppercase">Present Today</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <p className="text-2xl font-bold text-slate-900">{stats.todayPresent}</p>
+              <div className="text-3xl text-purple-200">📍</div>
+            </CardContent>
+          </Card>
 
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Pending Payroll</p>
-                <p className="text-2xl font-bold text-slate-900 mt-2">{stats.pendingPayrolls}</p>
-              </div>
-              <div className="text-4xl text-orange-200">💰</div>
-            </div>
-          </div>
+          <Card className="border-l-4 border-orange-500">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-slate-600 text-sm font-medium uppercase">Pending Payroll</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <p className="text-2xl font-bold text-slate-900">{stats.pendingPayrolls}</p>
+              <div className="text-3xl text-orange-200">💰</div>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="bg-white rounded-lg shadow mb-8">
-          <div className="border-b border-slate-200 flex">
-            {(['overview', 'employees', 'leaves', 'attendance', 'payroll'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors ${
-                  activeTab === tab
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
-
-          <div className="p-6">
-            {activeTab === 'overview' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-                  <h3 className="font-semibold text-blue-900 mb-2">🎯 Quick Actions</h3>
-                  <ul className="space-y-2 text-sm text-blue-800">
-                    <li>• Add new employee</li>
-                    <li>• Process leave requests</li>
-                    <li>• Generate payroll</li>
-                    <li>• View attendance reports</li>
-                  </ul>
-                </div>
-                <div className="bg-green-50 rounded-lg p-6 border border-green-200">
-                  <h3 className="font-semibold text-green-900 mb-2">📊 System Status</h3>
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="employees">Employees</TabsTrigger>
+            <TabsTrigger value="leaves">Leaves</TabsTrigger>
+            <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="payroll">Payroll</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overview" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="bg-blue-50/50 border-blue-200">
+                <CardHeader>
+                  <CardTitle className="text-blue-900 flex items-center gap-2">
+                    🎯 Quick Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button variant="outline" className="justify-start">Add Employee</Button>
+                    <Button variant="outline" className="justify-start">Review Leaves</Button>
+                    <Button variant="outline" className="justify-start">Run Payroll</Button>
+                    <Button variant="outline" className="justify-start">Export Data</Button>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-green-50/50 border-green-200">
+                <CardHeader>
+                  <CardTitle className="text-green-900 flex items-center gap-2">
+                    📊 System Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   <ul className="space-y-2 text-sm text-green-800">
-                    <li>✓ Database: Connected</li>
-                    <li>✓ HR Service: Running</li>
-                    <li>✓ All modules: Active</li>
-                    <li>✓ No pending issues</li>
+                    <li className="flex items-center gap-2">✓ <span className="font-medium">Database:</span> Connected</li>
+                    <li className="flex items-center gap-2">✓ <span className="font-medium">HR Service:</span> Running</li>
+                    <li className="flex items-center gap-2">✓ <span className="font-medium">All modules:</span> Active</li>
                   </ul>
-                </div>
-              </div>
-            )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
-            {activeTab === 'employees' && <EmployeesTab />}
-            {activeTab === 'leaves' && <LeavesTab />}
-            {activeTab === 'attendance' && <AttendanceTab />}
-            {activeTab === 'payroll' && <PayrollTab />}
-          </div>
-        </div>
+          <TabsContent value="employees">
+            <Card>
+              <CardContent className="pt-6">
+                <EmployeesTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="leaves">
+            <Card>
+              <CardContent className="pt-6">
+                <LeavesTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="attendance">
+            <Card>
+              <CardContent className="pt-6">
+                <AttendanceTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="payroll">
+            <Card>
+              <CardContent className="pt-6">
+                <PayrollTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
@@ -214,38 +260,32 @@ function EmployeesTab() {
   if (loading) return <div className="text-center py-8">Loading employees...</div>;
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-100">
-          <tr>
-            <th className="px-4 py-3 text-left font-semibold text-slate-700">Employee ID</th>
-            <th className="px-4 py-3 text-left font-semibold text-slate-700">Name</th>
-            <th className="px-4 py-3 text-left font-semibold text-slate-700">Email</th>
-            <th className="px-4 py-3 text-left font-semibold text-slate-700">Position</th>
-            <th className="px-4 py-3 text-left font-semibold text-slate-700">Status</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-200">
-          {employees.map((emp: any) => (
-            <tr key={emp.id} className="hover:bg-slate-50">
-              <td className="px-4 py-3 text-slate-600">{emp.employee_id}</td>
-              <td className="px-4 py-3 font-medium text-slate-900">{emp.name}</td>
-              <td className="px-4 py-3 text-slate-600">{emp.email}</td>
-              <td className="px-4 py-3 text-slate-600">{emp.position}</td>
-              <td className="px-4 py-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  emp.status === 'active'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-slate-100 text-slate-800'
-                }`}>
-                  {emp.status}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Employee ID</TableHead>
+          <TableHead>Name</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>Position</TableHead>
+          <TableHead>Status</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {employees.map((emp: any) => (
+          <TableRow key={emp.id}>
+            <TableCell className="font-mono text-xs">{emp.employee_id}</TableCell>
+            <TableCell className="font-medium">{emp.name}</TableCell>
+            <TableCell>{emp.email}</TableCell>
+            <TableCell>{emp.position}</TableCell>
+            <TableCell>
+              <Badge variant={emp.status === 'active' ? 'default' : 'secondary'}>
+                {emp.status}
+              </Badge>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -270,40 +310,35 @@ function LeavesTab() {
   if (loading) return <div className="text-center py-8">Loading leave requests...</div>;
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-100">
-          <tr>
-            <th className="px-4 py-3 text-left font-semibold text-slate-700">Employee</th>
-            <th className="px-4 py-3 text-left font-semibold text-slate-700">Leave Type</th>
-            <th className="px-4 py-3 text-left font-semibold text-slate-700">Start Date</th>
-            <th className="px-4 py-3 text-left font-semibold text-slate-700">End Date</th>
-            <th className="px-4 py-3 text-left font-semibold text-slate-700">Status</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-200">
-          {leaves.map((leave: any) => (
-            <tr key={leave.id} className="hover:bg-slate-50">
-              <td className="px-4 py-3 font-medium text-slate-900">{leave.employee_id}</td>
-              <td className="px-4 py-3 text-slate-600">{leave.leave_type}</td>
-              <td className="px-4 py-3 text-slate-600">{new Date(leave.start_date).toLocaleDateString()}</td>
-              <td className="px-4 py-3 text-slate-600">{new Date(leave.end_date).toLocaleDateString()}</td>
-              <td className="px-4 py-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  leave.status === 'approved'
-                    ? 'bg-green-100 text-green-800'
-                    : leave.status === 'pending'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {leave.status}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Employee</TableHead>
+          <TableHead>Leave Type</TableHead>
+          <TableHead>Start Date</TableHead>
+          <TableHead>End Date</TableHead>
+          <TableHead>Status</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {leaves.map((leave: any) => (
+          <TableRow key={leave.id}>
+            <TableCell className="font-medium">{leave.employee_id}</TableCell>
+            <TableCell>{leave.leave_type}</TableCell>
+            <TableCell>{new Date(leave.start_date).toLocaleDateString()}</TableCell>
+            <TableCell>{new Date(leave.end_date).toLocaleDateString()}</TableCell>
+            <TableCell>
+              <Badge variant={
+                leave.status === 'approved' ? 'default' : 
+                leave.status === 'pending' ? 'outline' : 'destructive'
+              }>
+                {leave.status}
+              </Badge>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -330,23 +365,39 @@ function AttendanceTab() {
   if (!stats) return <div className="text-center py-8 text-red-600">Failed to load attendance</div>;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="bg-green-50 rounded-lg p-6 border border-green-200">
-        <p className="text-slate-600 text-sm">Present</p>
-        <p className="text-4xl font-bold text-green-600">{stats.present}</p>
-      </div>
-      <div className="bg-red-50 rounded-lg p-6 border border-red-200">
-        <p className="text-slate-600 text-sm">Absent</p>
-        <p className="text-4xl font-bold text-red-600">{stats.absent}</p>
-      </div>
-      <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
-        <p className="text-slate-600 text-sm">On Leave</p>
-        <p className="text-4xl font-bold text-yellow-600">{stats.on_leave}</p>
-      </div>
-      <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-        <p className="text-slate-600 text-sm">Attendance %</p>
-        <p className="text-4xl font-bold text-blue-600">{stats.attendance_percentage.toFixed(1)}%</p>
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <Card className="bg-green-50/30 border-green-100">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-slate-500">Present</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-3xl font-bold text-green-600">{stats.present}</p>
+        </CardContent>
+      </Card>
+      <Card className="bg-red-50/30 border-red-100">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-slate-500">Absent</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-3xl font-bold text-red-600">{stats.absent}</p>
+        </CardContent>
+      </Card>
+      <Card className="bg-yellow-50/30 border-yellow-100">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-slate-500">On Leave</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-3xl font-bold text-yellow-600">{stats.on_leave}</p>
+        </CardContent>
+      </Card>
+      <Card className="bg-blue-50/30 border-blue-100">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-slate-500">Attendance %</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-3xl font-bold text-blue-600">{stats.attendance_percentage.toFixed(1)}%</p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -372,39 +423,33 @@ function PayrollTab() {
   if (loading) return <div className="text-center py-8">Loading payroll data...</div>;
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-100">
-          <tr>
-            <th className="px-4 py-3 text-left font-semibold text-slate-700">Employee</th>
-            <th className="px-4 py-3 text-left font-semibold text-slate-700">Month</th>
-            <th className="px-4 py-3 text-right font-semibold text-slate-700">Gross</th>
-            <th className="px-4 py-3 text-right font-semibold text-slate-700">Deductions</th>
-            <th className="px-4 py-3 text-right font-semibold text-slate-700">Net</th>
-            <th className="px-4 py-3 text-left font-semibold text-slate-700">Status</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-200">
-          {payrolls.map((pr: any) => (
-            <tr key={pr.id} className="hover:bg-slate-50">
-              <td className="px-4 py-3 font-medium text-slate-900">{pr.employee_id}</td>
-              <td className="px-4 py-3 text-slate-600">{pr.month}</td>
-              <td className="px-4 py-3 text-right text-slate-900 font-semibold">${pr.gross_salary.toFixed(2)}</td>
-              <td className="px-4 py-3 text-right text-red-600">-${pr.deductions.toFixed(2)}</td>
-              <td className="px-4 py-3 text-right text-green-600 font-semibold">${pr.net_salary.toFixed(2)}</td>
-              <td className="px-4 py-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  pr.status === 'approved'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {pr.status}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Employee</TableHead>
+          <TableHead>Month</TableHead>
+          <TableHead className="text-right">Gross</TableHead>
+          <TableHead className="text-right">Deductions</TableHead>
+          <TableHead className="text-right">Net</TableHead>
+          <TableHead>Status</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {payrolls.map((pr: any) => (
+          <TableRow key={pr.id}>
+            <TableCell className="font-medium">{pr.employee_id}</TableCell>
+            <TableCell>{pr.month}</TableCell>
+            <TableCell className="text-right">${pr.gross_salary.toLocaleString()}</TableCell>
+            <TableCell className="text-right text-red-600">-${pr.deductions.toLocaleString()}</TableCell>
+            <TableCell className="text-right font-bold text-green-600">${pr.net_salary.toLocaleString()}</TableCell>
+            <TableCell>
+              <Badge variant={pr.status === 'approved' ? 'default' : 'outline'}>
+                {pr.status}
+              </Badge>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

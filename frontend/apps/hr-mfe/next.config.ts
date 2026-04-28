@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // devIndicators: false,
-  transpilePackages: ["@erp/logger"],
+  transpilePackages: ["@erp/logger", "@erp/ui"],
   allowedDevOrigins: ["localhost:3001", "192.168.56.1:3001"],
   reactCompiler: true,
 };

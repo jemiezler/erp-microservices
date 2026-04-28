@@ -2,7 +2,7 @@ import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
   devIndicators: false,
-  transpilePackages: ["@erp/logger"],
+  transpilePackages: ["@erp/logger", "@erp/ui"],
   async headers() {
     return [
       {

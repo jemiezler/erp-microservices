@@ -1,4 +1,5 @@
 import { logger } from '@erp/logger';
+import { Button } from '@erp/ui';
 import Link from 'next/link';
 import { ArrowRight, Users, TrendingUp, Lock, Zap } from 'lucide-react';
 
@@ -19,6 +20,7 @@ export default function Home() {
             <a href='#' className='text-slate-600 hover:text-slate-900 transition-colors'>Services</a>
             <a href='#' className='text-slate-600 hover:text-slate-900 transition-colors'>Documentation</a>
             <a href='#' className='text-slate-600 hover:text-slate-900 transition-colors'>Support</a>
+            <Button size="sm">Get Started</Button>
           </nav>
         </div>
       </header>
