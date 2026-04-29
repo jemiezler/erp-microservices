@@ -4,6 +4,14 @@ import "github.com/gofiber/fiber/v3"
 
 type StubHandler struct{}
 
+// GetPendingLeaves godoc
+// @Summary      Get pending leave requests
+// @Description  Retrieve a list of all leave requests that are currently pending approval
+// @Tags         hr-stubs
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  map[string]interface{}
+// @Router       /api/v1/hr/leaves/pending [get]
 func (h *StubHandler) GetPendingLeaves(c fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"success": true,
@@ -28,6 +36,14 @@ func (h *StubHandler) GetPendingLeaves(c fiber.Ctx) error {
 	})
 }
 
+// GetAttendanceStats godoc
+// @Summary      Get attendance statistics
+// @Description  Retrieve summary statistics for today's attendance
+// @Tags         hr-stubs
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  map[string]interface{}
+// @Router       /api/v1/hr/attendance/stats [get]
 func (h *StubHandler) GetAttendanceStats(c fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"success": true,
@@ -42,6 +58,14 @@ func (h *StubHandler) GetAttendanceStats(c fiber.Ctx) error {
 	})
 }
 
+// GetPendingPayroll godoc
+// @Summary      Get pending payroll entries
+// @Description  Retrieve a list of all payroll entries that are currently pending processing
+// @Tags         hr-stubs
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  map[string]interface{}
+// @Router       /api/v1/hr/payroll/pending [get]
 func (h *StubHandler) GetPendingPayroll(c fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"success": true,

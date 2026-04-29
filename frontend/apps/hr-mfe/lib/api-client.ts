@@ -6,6 +6,8 @@
  * The Gateway routes requests to backend services
  */
 
+import { toast } from '@erp/ui';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_HR_API_URL || 'http://localhost:8080/api/v1';
 
 // Response types
@@ -151,11 +153,17 @@ async function fetchAPI<T>(
     const data = await response.json();
 
     if (!response.ok) {
-      throw new ApiError(
+      const apiError = new ApiError(
         response.status,
         data.code || 'ERROR',
         data.message || `HTTP ${response.status}`
       );
+
+      if (typeof window !== 'undefined') {
+        toast.error(apiError.message);
+      }
+
+      throw apiError;
     }
 
     return data;
@@ -163,7 +171,14 @@ async function fetchAPI<T>(
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError(500, 'NETWORK_ERROR', 'Network request failed');
+
+    const networkError = new ApiError(500, 'NETWORK_ERROR', 'Network request failed');
+
+    if (typeof window !== 'undefined') {
+      toast.error(networkError.message);
+    }
+
+    throw networkError;
   }
 }
 
@@ -242,7 +257,7 @@ export const leaveApi = {
     }),
 
   getHolidays: () =>
-    fetchAPI<ApiResponse<any[]>>('/hr/leaves/holidays'),
+    fetchAPI<ApiResponse<unknown[]>>('/hr/leaves/holidays'),
 };
 
 /**
@@ -303,9 +318,11 @@ export const payrollApi = {
     }),
 };
 
-export default {
+const apiClient = {
   employeeApi,
   leaveApi,
   attendanceApi,
   payrollApi,
 };
+
+export default apiClient;

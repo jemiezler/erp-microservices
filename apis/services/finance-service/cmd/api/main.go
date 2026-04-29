@@ -6,16 +6,20 @@ import (
 	"os/signal"
 	"syscall"
 
+	_ "erp/finance-service/docs"
 	sharedLogger "erp/shared/logger"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/logger"
+	"github.com/gofiber/swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 const ServiceName = "FINANCE-SERVICE"
 
+// Payroll model
+// @Description Payroll information for an employee
 type Payroll struct {
 	gorm.Model
 	EmployeeID uint    `json:"employee_id" gorm:"uniqueIndex"`
@@ -38,11 +42,27 @@ func initDatabase() {
 	DB.AutoMigrate(&Payroll{})
 }
 
+// @title Finance Service API
+// @version 1.0
+// @description This is the Finance microservice for the ERP system.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8082
+// @BasePath /
 func main() {
 	initDatabase()
 	app := fiber.New()
 
 	app.Use(logger.New(sharedLogger.GetConfig(ServiceName)))
+
+	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	app.Get("/health", func(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
@@ -50,6 +70,17 @@ func main() {
 
 	finance := app.Group("/api/v1/finance")
 
+	// EmployeeCreatedWebhook godoc
+	// @Summary      Handle employee creation webhook
+	// @Description  Initialize payroll account when a new employee is created
+	// @Tags         finance
+	// @Accept       json
+	// @Produce      json
+	// @Param        payload  body      object  true  "Employee creation payload"
+	// @Success      200      {object}  Payroll
+	// @Failure      400      {object}  map[string]string
+	// @Failure      500      {object}  map[string]string
+	// @Router       /api/v1/finance/webhook/employee-created [post]
 	finance.Post("/webhook/employee-created", func(c fiber.Ctx) error {
 		type Payload struct {
 			EmployeeID uint `json:"employee_id"`
@@ -73,6 +104,16 @@ func main() {
 		return c.Status(fiber.StatusOK).JSON(payroll)
 	})
 
+	// GetPayroll godoc
+	// @Summary      Get payroll by employee ID
+	// @Description  Retrieve payroll details for a specific employee
+	// @Tags         finance
+	// @Accept       json
+	// @Produce      json
+	// @Param        id   path      int  true  "Employee ID"
+	// @Success      200  {object}  Payroll
+	// @Failure      404  {object}  map[string]string
+	// @Router       /api/v1/finance/payroll/{id} [get]
 	finance.Get("/payroll/:id", func(c fiber.Ctx) error {
 		id := c.Params("id")
 		var p Payroll

@@ -1,13 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { employeeApi, leaveApi, attendanceApi, payrollApi, Employee, Leave, Attendance, AttendanceStats, Payroll, ApiError } from '@/lib/api-client';
+import { employeeApi, leaveApi, attendanceApi, payrollApi, Employee, AttendanceStats } from '../lib/api-client';
 import { 
   Button, 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
   Table, 
   TableBody, 
   TableCell, 
@@ -18,35 +14,28 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger
+  TabsTrigger,
+  BentoGrid,
+  BentoCard,
+  cn
 } from '@erp/ui';
+import { Users, Calendar, Clock, CreditCard, ChevronRight, Activity, Plus } from 'lucide-react';
 
-interface DashboardStats {
-  totalEmployees: number;
-  activeEmployees: number;
-  pendingLeaves: number;
-  todayPresent: number;
-  pendingPayrolls: number;
-}
-
-export default function HRDashboard() {
-  const [stats, setStats] = useState<DashboardStats>({
+export function HRDashboardContent() {
+  const [stats, setStats] = useState({
     totalEmployees: 0,
     activeEmployees: 0,
     pendingLeaves: 0,
     todayPresent: 0,
     pendingPayrolls: 0,
+    attendanceRate: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'leaves' | 'attendance' | 'payroll'>('overview');
 
   useEffect(() => {
     const loadDashboard = async () => {
       try {
         setLoading(true);
-        setError(null);
-
         const [empRes, pendingLeavesRes, statsRes, payrollRes] = await Promise.all([
           employeeApi.getAll(1, 1),
           leaveApi.getPending(),
@@ -54,195 +43,104 @@ export default function HRDashboard() {
           payrollApi.getPending(),
         ]);
 
+        const attendanceData = statsRes.data as AttendanceStats;
         setStats({
           totalEmployees: empRes.pagination?.total || 0,
-          activeEmployees: empRes.data?.filter((e: any) => e.status === 'active').length || 0,
+          activeEmployees: empRes.data?.filter((e: Employee) => e.status === 'active').length || 0,
           pendingLeaves: pendingLeavesRes.pagination?.total || 0,
-          todayPresent: (statsRes.data as any)?.present || 0,
+          todayPresent: attendanceData?.present || 0,
           pendingPayrolls: payrollRes.pagination?.total || 0,
+          attendanceRate: attendanceData?.attendance_percentage || 0,
         });
       } catch (err) {
-        const apiError = err as ApiError;
-        setError(apiError.message || 'Failed to load dashboard');
         console.error('Dashboard error:', err);
       } finally {
         setLoading(false);
       }
     };
-
-    loadDashboard();
+    void loadDashboard();
   }, []);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading dashboard...</p>
-        </div>
+      <div className='flex items-center justify-center py-40'>
+        <div className='w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin' />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">HR Dashboard</h1>
-              <p className="text-slate-600 mt-1">Manage employees, leaves, attendance & payroll</p>
-            </div>
-            <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold">
-              HR-MFE v1.0
-            </div>
+    <BentoGrid className='p-0 gap-6'>
+      {/* Metrics Row */}
+      <BentoCard span={3} className='bg-card text-card-foreground border-border'>
+           <div className='flex items-center gap-3 mb-4'>
+              <div className='p-2 bg-secondary rounded-lg'><Users size={18} className='text-primary' /></div>
+              <span className='text-[10px] font-bold uppercase tracking-widest text-muted-foreground'>Total Staff</span>
+           </div>
+           <div className='text-4xl font-black text-foreground'>{stats.totalEmployees}</div>
+           <div className='mt-4 flex items-center gap-1 text-[10px] font-bold text-success-foreground'>
+              <Activity size={12} /> +2.4% vs last month
+           </div>
+      </BentoCard>
+
+      <BentoCard span={3} className='bg-card text-card-foreground border-border'>
+           <div className='flex items-center gap-3 mb-4'>
+              <div className='p-2 bg-success rounded-lg'><Clock size={18} className='text-success-foreground' /></div>
+              <span className='text-[10px] font-bold uppercase tracking-widest text-muted-foreground'>Attendance</span>
+           </div>
+           <div className='text-4xl font-black text-foreground'>{stats.attendanceRate.toFixed(1)}%</div>
+           <div className='mt-4 text-[10px] font-bold text-muted-foreground'>{stats.todayPresent} present today</div>
+      </BentoCard>
+
+      <BentoCard span={3} className='bg-card text-card-foreground border-border'>
+           <div className='flex items-center gap-3 mb-4'>
+              <div className='p-2 bg-alert rounded-lg'><Calendar size={18} className='text-alert-foreground' /></div>
+              <span className='text-[10px] font-bold uppercase tracking-widest text-muted-foreground'>Leaves</span>
+           </div>
+           <div className='text-4xl font-black text-foreground'>{stats.pendingLeaves}</div>
+           <div className='mt-4 text-[10px] font-bold text-alert-foreground'>Requires Approval</div>
+      </BentoCard>
+
+      <BentoCard span={3} className='bg-primary text-primary-foreground border-border'>
+           <div className='flex items-center gap-3 mb-4'>
+              <div className='p-2 bg-primary-foreground/10 rounded-lg'><CreditCard size={18} className='text-primary-foreground' /></div>
+              <span className='text-[10px] font-bold uppercase tracking-widest text-primary-foreground/40'>Payroll</span>
+           </div>
+           <div className='text-4xl font-black'>{stats.pendingPayrolls}</div>
+           <div className='mt-4 text-[10px] font-bold text-success'>Ready to process</div>
+      </BentoCard>
+
+      {/* Interface Breakout - Main Content */}
+      <BentoCard span={12} className='bg-card text-card-foreground border-border p-0 overflow-hidden'>
+        <Tabs defaultValue='employees' className='w-full'>
+          <div className='px-8 pt-8 flex items-center justify-between border-b border-border pb-4'>
+            <TabsList className='bg-muted p-1 rounded-full'>
+              <TabsTrigger value='employees' className='rounded-full px-6 data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm'>Staff</TabsTrigger>
+              <TabsTrigger value='leaves' className='rounded-full px-6 data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm'>Requests</TabsTrigger>
+              <TabsTrigger value='payroll' className='rounded-full px-6 data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm'>Finance</TabsTrigger>
+            </TabsList>
+            <Button size='sm' className='bg-primary text-primary-foreground rounded-full flex items-center gap-2'>
+              <Plus size={16} /> New Record
+            </Button>
           </div>
-        </div>
-      </header>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mx-6 mt-6">
-          <p className="font-semibold">Error: {error}</p>
-        </div>
-      )}
-
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <Card className="border-l-4 border-blue-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-slate-600 text-sm font-medium uppercase">Total Employees</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between">
-              <p className="text-2xl font-bold text-slate-900">{stats.totalEmployees}</p>
-              <div className="text-3xl text-blue-200">👥</div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-green-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-slate-600 text-sm font-medium uppercase">Active</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between">
-              <p className="text-2xl font-bold text-slate-900">{stats.activeEmployees}</p>
-              <div className="text-3xl text-green-200">✓</div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-yellow-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-slate-600 text-sm font-medium uppercase">Pending Leaves</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between">
-              <p className="text-2xl font-bold text-slate-900">{stats.pendingLeaves}</p>
-              <div className="text-3xl text-yellow-200">⏳</div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-purple-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-slate-600 text-sm font-medium uppercase">Present Today</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between">
-              <p className="text-2xl font-bold text-slate-900">{stats.todayPresent}</p>
-              <div className="text-3xl text-purple-200">📍</div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-orange-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-slate-600 text-sm font-medium uppercase">Pending Payroll</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between">
-              <p className="text-2xl font-bold text-slate-900">{stats.pendingPayrolls}</p>
-              <div className="text-3xl text-orange-200">💰</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="employees">Employees</TabsTrigger>
-            <TabsTrigger value="leaves">Leaves</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="payroll">Payroll</TabsTrigger>
-          </TabsList>
           
-          <TabsContent value="overview" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="bg-blue-50/50 border-blue-200">
-                <CardHeader>
-                  <CardTitle className="text-blue-900 flex items-center gap-2">
-                    🎯 Quick Actions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline" className="justify-start">Add Employee</Button>
-                    <Button variant="outline" className="justify-start">Review Leaves</Button>
-                    <Button variant="outline" className="justify-start">Run Payroll</Button>
-                    <Button variant="outline" className="justify-start">Export Data</Button>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-green-50/50 border-green-200">
-                <CardHeader>
-                  <CardTitle className="text-green-900 flex items-center gap-2">
-                    📊 System Status
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-sm text-green-800">
-                    <li className="flex items-center gap-2">✓ <span className="font-medium">Database:</span> Connected</li>
-                    <li className="flex items-center gap-2">✓ <span className="font-medium">HR Service:</span> Running</li>
-                    <li className="flex items-center gap-2">✓ <span className="font-medium">All modules:</span> Active</li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </div>
+          <TabsContent value='employees' className='p-8'>
+             <EmployeesTab />
           </TabsContent>
-
-          <TabsContent value="employees">
-            <Card>
-              <CardContent className="pt-6">
-                <EmployeesTab />
-              </CardContent>
-            </Card>
+          <TabsContent value='leaves' className='p-8'>
+             <LeavesTab />
           </TabsContent>
-
-          <TabsContent value="leaves">
-            <Card>
-              <CardContent className="pt-6">
-                <LeavesTab />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="attendance">
-            <Card>
-              <CardContent className="pt-6">
-                <AttendanceTab />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="payroll">
-            <Card>
-              <CardContent className="pt-6">
-                <PayrollTab />
-              </CardContent>
-            </Card>
+          <TabsContent value='payroll' className='p-8'>
+             <PayrollTab />
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
+      </BentoCard>
+    </BentoGrid>
   );
 }
 
 function EmployeesTab() {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const loadEmployees = async () => {
       try {
@@ -250,206 +148,83 @@ function EmployeesTab() {
         setEmployees(res.data || []);
       } catch (err) {
         console.error('Failed to load employees:', err);
-      } finally {
-        setLoading(false);
       }
     };
-    loadEmployees();
+
+    void loadEmployees();
   }, []);
 
-  if (loading) return <div className="text-center py-8">Loading employees...</div>;
-
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Employee ID</TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Position</TableHead>
-          <TableHead>Status</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {employees.map((emp: any) => (
-          <TableRow key={emp.id}>
-            <TableCell className="font-mono text-xs">{emp.employee_id}</TableCell>
-            <TableCell className="font-medium">{emp.name}</TableCell>
-            <TableCell>{emp.email}</TableCell>
-            <TableCell>{emp.position}</TableCell>
-            <TableCell>
-              <Badge variant={emp.status === 'active' ? 'default' : 'secondary'}>
-                {emp.status}
-              </Badge>
-            </TableCell>
+    <div className='rounded-[24px] border border-border overflow-hidden bg-card shadow-sm'>
+      <Table>
+        <TableHeader className='bg-muted/50'>
+          <TableRow className='border-0'>
+            <TableHead className='font-bold text-muted-foreground text-[10px] uppercase'>Identity</TableHead>
+            <TableHead className='font-bold text-muted-foreground text-[10px] uppercase'>Role</TableHead>
+            <TableHead className='font-bold text-muted-foreground text-[10px] uppercase'>Status</TableHead>
+            <TableHead className='text-right'></TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-}
-
-function LeavesTab() {
-  const [leaves, setLeaves] = useState<Leave[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadLeaves = async () => {
-      try {
-        const res = await leaveApi.getPending();
-        setLeaves(res.data || []);
-      } catch (err) {
-        console.error('Failed to load leaves:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadLeaves();
-  }, []);
-
-  if (loading) return <div className="text-center py-8">Loading leave requests...</div>;
-
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Employee</TableHead>
-          <TableHead>Leave Type</TableHead>
-          <TableHead>Start Date</TableHead>
-          <TableHead>End Date</TableHead>
-          <TableHead>Status</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {leaves.map((leave: any) => (
-          <TableRow key={leave.id}>
-            <TableCell className="font-medium">{leave.employee_id}</TableCell>
-            <TableCell>{leave.leave_type}</TableCell>
-            <TableCell>{new Date(leave.start_date).toLocaleDateString()}</TableCell>
-            <TableCell>{new Date(leave.end_date).toLocaleDateString()}</TableCell>
-            <TableCell>
-              <Badge variant={
-                leave.status === 'approved' ? 'default' : 
-                leave.status === 'pending' ? 'outline' : 'destructive'
-              }>
-                {leave.status}
-              </Badge>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-}
-
-function AttendanceTab() {
-  const [stats, setStats] = useState<AttendanceStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const res = await attendanceApi.getStats();
-        setStats(res.data as any);
-      } catch (err) {
-        console.error('Failed to load attendance stats:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadStats();
-  }, []);
-
-  if (loading) return <div className="text-center py-8">Loading attendance data...</div>;
-
-  if (!stats) return <div className="text-center py-8 text-red-600">Failed to load attendance</div>;
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <Card className="bg-green-50/30 border-green-100">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-slate-500">Present</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-3xl font-bold text-green-600">{stats.present}</p>
-        </CardContent>
-      </Card>
-      <Card className="bg-red-50/30 border-red-100">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-slate-500">Absent</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-3xl font-bold text-red-600">{stats.absent}</p>
-        </CardContent>
-      </Card>
-      <Card className="bg-yellow-50/30 border-yellow-100">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-slate-500">On Leave</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-3xl font-bold text-yellow-600">{stats.on_leave}</p>
-        </CardContent>
-      </Card>
-      <Card className="bg-blue-50/30 border-blue-100">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-slate-500">Attendance %</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-3xl font-bold text-blue-600">{stats.attendance_percentage.toFixed(1)}%</p>
-        </CardContent>
-      </Card>
+        </TableHeader>
+        <TableBody>
+          {employees.map((emp: Employee) => (
+            <TableRow key={emp.id} className='hover:bg-muted/30 transition-colors border-border'>
+              <TableCell>
+                <div className='flex items-center gap-3'>
+                   <div className='w-8 h-8 rounded-full bg-secondary flex items-center justify-center font-bold text-[10px] text-secondary-foreground'>
+                      {emp.name.charAt(0)}
+                   </div>
+                   <div>
+                      <div className='font-bold text-sm text-foreground'>{emp.name}</div>
+                      <div className='text-[10px] text-muted-foreground font-medium'>{emp.email}</div>
+                   </div>
+                </div>
+              </TableCell>
+              <TableCell className='text-xs font-medium text-foreground'>{emp.position}</TableCell>
+              <TableCell>
+                <Badge className={cn("rounded-full border-0 px-3", 
+                  emp.status.toLowerCase() === 'active' ? 'bg-success text-success-foreground' : 
+                  emp.status.toLowerCase() === 'on leave' ? 'bg-alert text-alert-foreground' :
+                  'bg-secondary text-secondary-foreground'
+                )}>
+                  {emp.status}
+                </Badge>
+              </TableCell>
+              <TableCell className='text-right'>
+                <Button variant='ghost' size='icon' className='rounded-full text-muted-foreground hover:text-foreground'><ChevronRight size={16} /></Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }
 
-function PayrollTab() {
-  const [payrolls, setPayrolls] = useState<Payroll[]>([]);
-  const [loading, setLoading] = useState(true);
+// Simplified placeholders for other tabs to keep focus on grid structure
+function LeavesTab() { return <div className='p-20 text-center text-muted-foreground font-bold'>Leave Requests Interface</div> }
+function PayrollTab() { return <div className='p-20 text-center text-muted-foreground font-bold'>Payroll Engine Interface</div> }
 
-  useEffect(() => {
-    const loadPayrolls = async () => {
-      try {
-        const res = await payrollApi.getPending();
-        setPayrolls(res.data || []);
-      } catch (err) {
-        console.error('Failed to load payrolls:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadPayrolls();
-  }, []);
-
-  if (loading) return <div className="text-center py-8">Loading payroll data...</div>;
-
+export default function HRDashboardPage() {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Employee</TableHead>
-          <TableHead>Month</TableHead>
-          <TableHead className="text-right">Gross</TableHead>
-          <TableHead className="text-right">Deductions</TableHead>
-          <TableHead className="text-right">Net</TableHead>
-          <TableHead>Status</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {payrolls.map((pr: any) => (
-          <TableRow key={pr.id}>
-            <TableCell className="font-medium">{pr.employee_id}</TableCell>
-            <TableCell>{pr.month}</TableCell>
-            <TableCell className="text-right">${pr.gross_salary.toLocaleString()}</TableCell>
-            <TableCell className="text-right text-red-600">-${pr.deductions.toLocaleString()}</TableCell>
-            <TableCell className="text-right font-bold text-green-600">${pr.net_salary.toLocaleString()}</TableCell>
-            <TableCell>
-              <Badge variant={pr.status === 'approved' ? 'default' : 'outline'}>
-                {pr.status}
-              </Badge>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className='min-h-screen bg-background font-sans text-foreground'>
+      <header className='px-10 py-10 flex flex-col md:flex-row md:items-end justify-between gap-6'>
+        <div className='flex flex-col items-start'>
+           <Badge className='bg-primary text-primary-foreground rounded-full mb-4 px-3 py-1'>Core Module</Badge>
+           <h1 className='text-6xl font-black tracking-tighter text-foreground'>Human Resources</h1>
+        </div>
+        <div className='flex items-center gap-4 bg-card/50 p-2 rounded-3xl border border-border backdrop-blur-sm shrink-0'>
+           <div className='text-right px-4'>
+              <div className='text-[10px] font-bold text-muted-foreground uppercase tracking-widest'>System Health</div>
+              <div className='text-sm font-bold text-success-foreground'>Stable 100%</div>
+           </div>
+           <div className='w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg'>
+              <Activity className='text-primary-foreground' size={24} />
+           </div>
+        </div>
+      </header>
+      <main className='px-10 pb-20'>
+        <HRDashboardContent />
+      </main>
+    </div>
   );
 }

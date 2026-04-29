@@ -8,20 +8,38 @@ import (
 
 	"erp/hr-service/internal/database"
 	"erp/hr-service/internal/handlers"
+	_ "erp/hr-service/docs"
 	sharedLogger "erp/shared/logger"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/logger"
+	"github.com/gofiber/swagger"
 )
 
 const ServiceName = "HR-SERVICE"
 
+// @title HR Service API
+// @version 1.0
+// @description This is the HR microservice for the ERP system.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8081
+// @BasePath /
 func main() {
 	database.InitDB(ServiceName)
 
 	app := fiber.New()
 
 	app.Use(logger.New(sharedLogger.GetConfig(ServiceName)))
+
+	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	app.Get("/health", func(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)

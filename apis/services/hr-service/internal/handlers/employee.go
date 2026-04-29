@@ -15,12 +15,31 @@ type EmployeeHandler struct {
 	ServiceName string
 }
 
+// GetAll godoc
+// @Summary      Get all employees
+// @Description  Get a list of all employees with their managers preloaded
+// @Tags         employees
+// @Accept       json
+// @Produce      json
+// @Success      200  {array}   models.Employee
+// @Router       /api/v1/hr/employees [get]
 func (h *EmployeeHandler) GetAll(c fiber.Ctx) error {
 	var employees []models.Employee
 	h.DB.Preload("Manager").Find(&employees)
 	return c.JSON(employees)
 }
 
+// Create godoc
+// @Summary      Create a new employee
+// @Description  Create a new employee and log the audit trail
+// @Tags         employees
+// @Accept       json
+// @Produce      json
+// @Param        employee  body      models.Employee  true  "Employee to create"
+// @Success      201       {object}  models.Employee
+// @Failure      400       {object}  map[string]string
+// @Failure      500       {object}  map[string]string
+// @Router       /api/v1/hr/employees [post]
 func (h *EmployeeHandler) Create(c fiber.Ctx) error {
 	var emp models.Employee
 	if err := c.Bind().Body(&emp); err != nil {
@@ -51,6 +70,16 @@ func (h *EmployeeHandler) Create(c fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(emp)
 }
 
+// GetByID godoc
+// @Summary      Get an employee by ID
+// @Description  Get detailed information about an employee by their ID
+// @Tags         employees
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int  true  "Employee ID"
+// @Success      200  {object}  models.Employee
+// @Failure      404  {object}  map[string]string
+// @Router       /api/v1/hr/employees/{id} [get]
 func (h *EmployeeHandler) GetByID(c fiber.Ctx) error {
 	id := c.Params("id")
 	var emp models.Employee
@@ -60,6 +89,18 @@ func (h *EmployeeHandler) GetByID(c fiber.Ctx) error {
 	return c.JSON(emp)
 }
 
+// Update godoc
+// @Summary      Update an existing employee
+// @Description  Update employee information and log status changes
+// @Tags         employees
+// @Accept       json
+// @Produce      json
+// @Param        id        path      int              true  "Employee ID"
+// @Param        employee  body      models.Employee  true  "Updated employee data"
+// @Success      200       {object}  models.Employee
+// @Failure      400       {object}  map[string]string
+// @Failure      404       {object}  map[string]string
+// @Router       /api/v1/hr/employees/{id} [patch]
 func (h *EmployeeHandler) Update(c fiber.Ctx) error {
 	id := c.Params("id")
 	var existing models.Employee

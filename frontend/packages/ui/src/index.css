@@ -1,1 +1,26 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', 'SF Pro', ui-sans-serif, system-ui;
+
+  --color-background: #F3F3F3;
+  --color-foreground: #000000;
+  --color-card-background: #FFFFFF;
+
+  --color-primary: #000000;
+  --color-primary-foreground: #FFFFFF;
+
+  --color-success: #C1FFB1;
+  --color-alert: #FFB1B1;
+
+  --radius-bento: 32px;
+  --radius-bento-inner: 24px;
+
+  --shadow-bento: 0 10px 40px -15px rgba(0, 0, 0, 0.05);
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
