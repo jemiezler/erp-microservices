@@ -143,6 +143,47 @@ func main() {
 		})
 	})
 
+	// Swagger routes through gateway
+	app.All("/api/v1/hr/swagger/*", func(c fiber.Ctx) error {
+		swaggerPath := c.Params("*")
+		target := fmt.Sprintf("%s/swagger/%s", config.HR, swaggerPath)
+		c.Request().Header.Set("X-Forwarded-Prefix", "/api/v1/hr")
+
+		log.Printf("[%s] HR Swagger: %s /api/v1/hr/swagger/%s", c.Get("X-Request-ID"), c.Method(), swaggerPath)
+
+		if err := proxy.Do(c, target); err != nil {
+			applyProxyCORSHeaders(c, corsConfig)
+			log.Printf("[%s] HR Swagger Error: %v", c.Get("X-Request-ID"), err)
+			return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
+				"error":      "Failed to reach HR swagger endpoint",
+				"request_id": c.Get("X-Request-ID"),
+			})
+		}
+
+		applyProxyCORSHeaders(c, corsConfig)
+		return nil
+	})
+
+	app.All("/api/v1/finance/swagger/*", func(c fiber.Ctx) error {
+		swaggerPath := c.Params("*")
+		target := fmt.Sprintf("%s/swagger/%s", config.Finance, swaggerPath)
+		c.Request().Header.Set("X-Forwarded-Prefix", "/api/v1/finance")
+
+		log.Printf("[%s] Finance Swagger: %s /api/v1/finance/swagger/%s", c.Get("X-Request-ID"), c.Method(), swaggerPath)
+
+		if err := proxy.Do(c, target); err != nil {
+			applyProxyCORSHeaders(c, corsConfig)
+			log.Printf("[%s] Finance Swagger Error: %v", c.Get("X-Request-ID"), err)
+			return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
+				"error":      "Failed to reach Finance swagger endpoint",
+				"request_id": c.Get("X-Request-ID"),
+			})
+		}
+
+		applyProxyCORSHeaders(c, corsConfig)
+		return nil
+	})
+
 	// HR Service routes - proxy to hr-service
 	app.All("/api/v1/hr/*", func(c fiber.Ctx) error {
 		path := c.Path()

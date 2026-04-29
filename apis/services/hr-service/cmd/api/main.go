@@ -6,14 +6,14 @@ import (
 	"os/signal"
 	"syscall"
 
+	_ "erp/hr-service/docs"
 	"erp/hr-service/internal/database"
 	"erp/hr-service/internal/handlers"
-	_ "erp/hr-service/docs"
 	sharedLogger "erp/shared/logger"
 
+	"github.com/gofiber/contrib/v3/swaggo"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/logger"
-	"github.com/gofiber/swagger"
 )
 
 const ServiceName = "HR-SERVICE"
@@ -39,7 +39,7 @@ func main() {
 
 	app.Use(logger.New(sharedLogger.GetConfig(ServiceName)))
 
-	app.Get("/swagger/*", swagger.HandlerDefault)
+	app.Get("/swagger/*", swaggo.HandlerDefault)
 
 	app.Get("/health", func(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)

@@ -9,9 +9,9 @@ import (
 	_ "erp/finance-service/docs"
 	sharedLogger "erp/shared/logger"
 
+	"github.com/gofiber/contrib/v3/swaggo"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/logger"
-	"github.com/gofiber/swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -62,7 +62,7 @@ func main() {
 
 	app.Use(logger.New(sharedLogger.GetConfig(ServiceName)))
 
-	app.Get("/swagger/*", swagger.HandlerDefault)
+	app.Get("/swagger/*", swaggo.HandlerDefault)
 
 	app.Get("/health", func(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
